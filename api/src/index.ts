@@ -12,9 +12,31 @@ import simulationRouter from './routes/simulation';
 import coverageRouter from './routes/coverage';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT) || 3000;
 
-app.use(cors());
+const allowedOrigins = (process.env.CORS_ORIGIN || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+if (process.env.NODE_ENV !== 'production') {
+  if (!allowedOrigins.includes('http://localhost:5173')) {
+    allowedOrigins.push('http://localhost:5173');
+  }
+}
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // allow requests with no origin (like mobile apps, curl, or same-origin)
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS origin ${origin} not allowed`));
+      }
+    },
+  })
+);
 app.use(express.json());
 
 // Existing routes (unchanged)
