@@ -4,7 +4,8 @@ import psycopg
 from data import load_finished_matches, load_season_matches   # importing data.py also loads .env
 from simulate import simulate, compute_fixture_probabilities, N_SIMS
 
-SEASON = 2026
+# Season argument or SEASON environment variable defaulting to 2026
+SEASON = int(sys.argv[2]) if len(sys.argv) > 2 else int(os.environ.get("SEASON", 2026))
 CODES = [sys.argv[1]] if len(sys.argv) > 1 else ["PD", "SA", "PL", "CL"]
 
 UPSERT = """
@@ -33,13 +34,19 @@ DO UPDATE SET prob_home  = EXCLUDED.prob_home,
               updated_at = now();
 """
 
-with psycopg.connect(
-    host=os.environ.get("POSTGRES_HOST", "127.0.0.1"),
-    port=5432,
-    dbname=os.environ["POSTGRES_DB"],
-    user=os.environ["POSTGRES_USER"],
-    password=os.environ["POSTGRES_PASSWORD"],
-) as conn:
+conn_kwargs = (
+    {"conninfo": os.environ["DATABASE_URL"]}
+    if "DATABASE_URL" in os.environ
+    else {
+        "host": os.environ.get("POSTGRES_HOST", "127.0.0.1"),
+        "port": 5432,
+        "dbname": os.environ["POSTGRES_DB"],
+        "user": os.environ["POSTGRES_USER"],
+        "password": os.environ["POSTGRES_PASSWORD"],
+    }
+)
+
+with psycopg.connect(**conn_kwargs) as conn:
     with conn.cursor() as cur:
         for code in CODES:
             print(f"Simulating {code} for season {SEASON}...")
