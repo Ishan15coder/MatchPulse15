@@ -33,10 +33,14 @@ if (envPath) {
   }
 }
 
-export const pool = new Pool({
-  host: process.env.POSTGRES_HOST || '127.0.0.1',
-  port: 5432,
-  database: process.env.POSTGRES_DB,
-  user: process.env.POSTGRES_USER,
-  password: process.env.POSTGRES_PASSWORD,
-});
+export const pool = process.env.DATABASE_URL
+  ? new Pool({
+      connectionString: process.env.DATABASE_URL,
+    })
+  : new Pool({
+      host: process.env.POSTGRES_HOST || '127.0.0.1',
+      port: 5432,
+      database: process.env.POSTGRES_DB,
+      user: process.env.POSTGRES_USER,
+      password: process.env.POSTGRES_PASSWORD,
+    });
