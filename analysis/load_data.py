@@ -2,12 +2,13 @@ import os
 import pandas as pd
 import psycopg
 
-with open(".env", encoding="utf-8") as f:
-    for line in f:
-        line = line.strip()
-        if line and not line.startswith("#") and "=" in line:
-            k, v = line.split("=", 1)
-            os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
+if os.path.exists(".env"):
+    with open(".env", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                k, v = line.split("=", 1)
+                os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
 
 QUERY = """
 SELECT m.kickoff_utc, m.season, m.home_team_id, m.away_team_id,
@@ -18,13 +19,19 @@ WHERE c.code = 'PD' AND m.status = 'FINISHED'
 ORDER BY m.kickoff_utc;
 """
 
-with psycopg.connect(
-    host=os.environ.get("POSTGRES_HOST", "127.0.0.1"),
-    port=5432,
-    dbname=os.environ["POSTGRES_DB"],
-    user=os.environ["POSTGRES_USER"],
-    password=os.environ["POSTGRES_PASSWORD"],
-) as conn:
+conn_kwargs = (
+    {"conninfo": os.environ["DATABASE_URL"]}
+    if "DATABASE_URL" in os.environ
+    else {
+        "host": os.environ.get("POSTGRES_HOST", "127.0.0.1"),
+        "port": 5432,
+        "dbname": os.environ["POSTGRES_DB"],
+        "user": os.environ["POSTGRES_USER"],
+        "password": os.environ["POSTGRES_PASSWORD"],
+    }
+)
+
+with psycopg.connect(**conn_kwargs) as conn:
     with conn.cursor() as cur:
         cur.execute(QUERY)
         columns = [d.name for d in cur.description]
