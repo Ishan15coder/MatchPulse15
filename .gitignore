@@ -1,0 +1,10 @@
+.env
+__pycache__/
+node_modules/
+.venv/
+todo.md
+api/node_modules/
+api/dist/
+web/node_modules/
+web/dist/
+.env.local
