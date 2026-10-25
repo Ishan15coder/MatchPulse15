@@ -1,22 +1,25 @@
-import truststore
-truststore.inject_into_ssl()
+try:
+    import truststore
+    truststore.inject_into_ssl()
+except Exception:
+    pass
 
 import os
+import sys
 import time
 import requests
 import psycopg
 
-# ---------- load .env ----------
-with open(".env", encoding="utf-8") as f:
-    for line in f:
-        line = line.strip()
-        if line and not line.startswith("#") and "=" in line:
-            k, v = line.split("=", 1)
-            os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
+# ---------- load .env if present ----------
+if os.path.exists(".env"):
+    with open(".env", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                k, v = line.split("=", 1)
+                os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
 
 H = {"X-Auth-Token": os.environ["FOOTBALLDATA_KEY"]}
-
-import sys
 
 COMPETITIONS = (sys.argv[1].upper(),) if len(sys.argv) > 1 else ("PD", "SA", "PL", "CL")
 SEASONS = (int(sys.argv[2]),) if len(sys.argv) > 2 else ((2026,) if len(sys.argv) > 1 else (2023, 2024, 2025, 2026))
@@ -56,13 +59,19 @@ DO UPDATE SET status = EXCLUDED.status,
 start = time.time()
 team_ids = {}   # external team id -> internal id, shared across the whole run
 
-with psycopg.connect(
-    host=os.environ.get("POSTGRES_HOST", "127.0.0.1"),
-    port=5432,
-    dbname=os.environ["POSTGRES_DB"],
-    user=os.environ["POSTGRES_USER"],
-    password=os.environ["POSTGRES_PASSWORD"],
-) as conn:
+conn_kwargs = (
+    {"conninfo": os.environ["DATABASE_URL"]}
+    if "DATABASE_URL" in os.environ
+    else {
+        "host": os.environ.get("POSTGRES_HOST", "127.0.0.1"),
+        "port": 5432,
+        "dbname": os.environ["POSTGRES_DB"],
+        "user": os.environ["POSTGRES_USER"],
+        "password": os.environ["POSTGRES_PASSWORD"],
+    }
+)
+
+with psycopg.connect(**conn_kwargs) as conn:
     with conn.cursor() as cur:
 
         def get_team_id(t):
