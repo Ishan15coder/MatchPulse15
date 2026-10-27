@@ -3,6 +3,8 @@ import { useUpcomingMatches } from '../hooks/useUpcomingMatches';
 import { useStandings } from '../hooks/useStandings';
 import { sortFeaturedMatches, CURRENT_SEASON } from '../lib/marquee';
 
+const MAX_FEATURED = 10;
+
 interface Props {
   competition: string;
   season: number;
@@ -17,7 +19,7 @@ export default function MarqueeFixtureCard({ competition, season }: Props) {
   const [activeIndex, setActiveIndex] = useState(0);
 
   const featured = isCurrentSeason && matches && !isError
-    ? sortFeaturedMatches(matches, standings).slice(0, 3)
+    ? sortFeaturedMatches(matches, standings).slice(0, MAX_FEATURED)
     : [];
 
   const handleScroll = useCallback(() => {
@@ -325,23 +327,35 @@ export default function MarqueeFixtureCard({ competition, season }: Props) {
         })}
       </div>
 
-      {/* Dots Indicator under the card */}
+      {/* Slide Position Indicator under the card: text counter if > 6, otherwise dots */}
       {showControls && (
-        <div className="flex items-center justify-center gap-2 mt-4" role="tablist" aria-label="Fixture slides">
-          {featured.map((m, dotIdx) => (
-            <button
-              key={m.id}
-              role="tab"
-              aria-selected={dotIdx === activeIndex}
-              aria-label={`Go to fixture ${dotIdx + 1}: ${m.home_team_name} vs ${m.away_team_name}`}
-              onClick={() => scrollToSlide(dotIdx)}
-              className={`h-2 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/50 ${
-                dotIdx === activeIndex
-                  ? 'w-6 bg-white shadow-sm'
-                  : 'w-2 bg-white/30 hover:bg-white/50'
-              }`}
-            />
-          ))}
+        <div className="flex items-center justify-center mt-4">
+          {featured.length > 6 ? (
+            <div
+              className="px-3 py-1 rounded-full bg-white/10 border border-white/15 text-xs font-semibold text-slate-200 tabular-nums tracking-wide"
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              {activeIndex + 1} / {featured.length}
+            </div>
+          ) : (
+            <div className="flex items-center justify-center gap-2" role="tablist" aria-label="Fixture slides">
+              {featured.map((m, dotIdx) => (
+                <button
+                  key={m.id}
+                  role="tab"
+                  aria-selected={dotIdx === activeIndex}
+                  aria-label={`Go to fixture ${dotIdx + 1}: ${m.home_team_name} vs ${m.away_team_name}`}
+                  onClick={() => scrollToSlide(dotIdx)}
+                  className={`h-2 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/50 ${
+                    dotIdx === activeIndex
+                      ? 'w-6 bg-white shadow-sm'
+                      : 'w-2 bg-white/30 hover:bg-white/50'
+                  }`}
+                />
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
