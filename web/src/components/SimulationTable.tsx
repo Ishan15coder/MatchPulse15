@@ -61,21 +61,21 @@ export default function SimulationTable({ competition, season }: Props) {
 
   return (
     <div>
-      <div className="table-scroll">
-        <table className="data-table" aria-label="Season outlook">
+      <div className="table-scroll overflow-x-auto w-full">
+        <table className="data-table w-full" aria-label="Season outlook">
           <thead>
             <tr>
               <th className="w-8 text-center">#</th>
               <th>Team</th>
-              <th className="text-right whitespace-nowrap">Pts now</th>
+              <th className="text-right whitespace-nowrap hidden sm:table-cell">Pts now</th>
               <th className="text-right whitespace-nowrap">xPts</th>
-              <th style={{ minWidth: 115 }} title={isUcl ? 'Finish 1st in the 36-team single table' : 'Win League Title'}>
+              <th style={{ minWidth: 100 }} title={isUcl ? 'Finish 1st in the 36-team single table' : 'Win League Title'}>
                 {isUcl ? 'Phase 1st' : 'Title'}
               </th>
-              <th style={{ minWidth: 115 }} title={isUcl ? 'Direct qualification to Round of 16 (Ranks 1-8)' : 'Top 4 qualification'}>
+              <th style={{ minWidth: 100 }} title={isUcl ? 'Direct qualification to Round of 16 (Ranks 1-8)' : 'Top 4 qualification'}>
                 {isUcl ? 'Top 8 (R16)' : 'Top 4'}
               </th>
-              <th style={{ minWidth: 115 }} title={isUcl ? 'Eliminated from competition (Ranks 25-36)' : 'Relegation to lower tier'}>
+              <th className="hidden md:table-cell" style={{ minWidth: 100 }} title={isUcl ? 'Eliminated from competition (Ranks 25-36)' : 'Relegation to lower tier'}>
                 {isUcl ? 'Eliminated' : 'Relegation'}
               </th>
             </tr>
@@ -96,10 +96,10 @@ export default function SimulationTable({ competition, season }: Props) {
                         loading="lazy"
                       />
                     )}
-                    <span className="font-medium">{team.short_name ?? team.name}</span>
+                    <span className="font-medium truncate max-w-[110px] sm:max-w-none">{team.short_name ?? team.name}</span>
                   </div>
                 </td>
-                <td className="text-right font-semibold">{team.points_now}</td>
+                <td className="text-right font-semibold hidden sm:table-cell">{team.points_now}</td>
                 <td className="text-right font-semibold text-accent">{team.exp_points.toFixed(1)}</td>
                 <td>
                   <ProbBar
@@ -115,7 +115,7 @@ export default function SimulationTable({ competition, season }: Props) {
                     label={isUcl ? 'Top 8 (R16) probability' : 'Top-4 probability'}
                   />
                 </td>
-                <td>
+                <td className="hidden md:table-cell">
                   <ProbBar
                     value={team.p_relegation}
                     className="prob-fill-relg"
@@ -133,7 +133,7 @@ export default function SimulationTable({ competition, season }: Props) {
           <button
             type="button"
             onClick={() => setExpanded(!expanded)}
-            className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold rounded-lg transition-all hover:bg-emerald-500/10 hover:text-emerald-500"
+            className="min-h-[40px] inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg transition-all hover:bg-emerald-500/10 hover:text-emerald-500 focus:outline-none focus:ring-2 focus:ring-accent"
             style={{
               background: 'color-mix(in srgb, var(--border) 40%, transparent)',
               color: 'var(--text-primary)',

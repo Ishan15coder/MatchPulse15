@@ -89,7 +89,7 @@ export default function Dashboard() {
                       aria-controls="panel-table"
                       aria-selected={view === 'table'}
                       onClick={() => setView('table')}
-                      className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-150 ${
+                      className={`min-h-[40px] px-3.5 py-2 text-xs font-medium rounded-lg transition-all duration-150 flex items-center justify-center ${
                         view === 'table'
                           ? 'bg-emerald-500 text-white shadow-sm font-semibold'
                           : 'hover:text-[var(--text-primary)]'
@@ -106,7 +106,7 @@ export default function Dashboard() {
                       aria-controls="panel-outlook"
                       aria-selected={view === 'outlook'}
                       onClick={() => setView('outlook')}
-                      className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-150 flex items-center gap-1.5 ${
+                      className={`min-h-[40px] px-3.5 py-2 text-xs font-medium rounded-lg transition-all duration-150 flex items-center justify-center gap-1.5 ${
                         view === 'outlook'
                           ? 'bg-emerald-500 text-white shadow-sm font-semibold'
                           : 'hover:text-[var(--text-primary)]'

@@ -41,16 +41,16 @@ export default function StandingsTable({ competition, season }: Props) {
 
   return (
     <div>
-      <div className="table-scroll">
-        <table className="data-table" aria-label="League table">
+      <div className="table-scroll overflow-x-auto w-full">
+        <table className="data-table w-full" aria-label="League table">
           <thead>
             <tr>
               <th className="w-8 text-center">#</th>
               <th>Team</th>
               <th className="text-center">P</th>
-              <th className="text-center">W</th>
-              <th className="text-center">D</th>
-              <th className="text-center">L</th>
+              <th className="text-center hidden sm:table-cell">W</th>
+              <th className="text-center hidden sm:table-cell">D</th>
+              <th className="text-center hidden sm:table-cell">L</th>
               <th className="text-right">GD</th>
               <th className="text-right font-semibold">Pts</th>
             </tr>
@@ -73,13 +73,13 @@ export default function StandingsTable({ competition, season }: Props) {
                           loading="lazy"
                         />
                       )}
-                      <span className="font-medium">{row.name}</span>
+                      <span className="font-medium truncate max-w-[120px] sm:max-w-none">{row.name}</span>
                     </div>
                   </td>
                   <td className="text-center tabular-nums">{row.played}</td>
-                  <td className="text-center tabular-nums">{row.won}</td>
-                  <td className="text-center tabular-nums">{row.drawn}</td>
-                  <td className="text-center tabular-nums">{row.lost}</td>
+                  <td className="text-center tabular-nums hidden sm:table-cell">{row.won}</td>
+                  <td className="text-center tabular-nums hidden sm:table-cell">{row.drawn}</td>
+                  <td className="text-center tabular-nums hidden sm:table-cell">{row.lost}</td>
                   <td className="text-right tabular-nums">
                     {row.goal_difference > 0 ? `+${row.goal_difference}` : row.goal_difference}
                   </td>
@@ -96,7 +96,7 @@ export default function StandingsTable({ competition, season }: Props) {
           <button
             type="button"
             onClick={() => setExpanded(!expanded)}
-            className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold rounded-lg transition-all hover:bg-emerald-500/10 hover:text-emerald-500"
+            className="min-h-[40px] inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg transition-all hover:bg-emerald-500/10 hover:text-emerald-500 focus:outline-none focus:ring-2 focus:ring-accent"
             style={{
               background: 'color-mix(in srgb, var(--border) 40%, transparent)',
               color: 'var(--text-primary)',

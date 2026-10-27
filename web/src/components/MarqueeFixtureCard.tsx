@@ -88,7 +88,7 @@ export default function MarqueeFixtureCard({ competition, season }: Props) {
       role="region"
       aria-roledescription="carousel"
       aria-label={`${compLabel} Featured Fixtures`}
-      className="relative overflow-hidden rounded-2xl p-5 sm:p-6 text-white shadow-xl transition-all"
+      className="relative overflow-hidden rounded-2xl p-4 sm:p-6 text-white shadow-xl transition-all"
       style={{
         background:
           competition === 'CL'
@@ -176,7 +176,7 @@ export default function MarqueeFixtureCard({ competition, season }: Props) {
         ref={scrollRef}
         tabIndex={0}
         aria-label="Fixtures slider"
-        className="flex w-full overflow-x-auto focus:outline-none"
+        className="flex w-full overflow-x-auto focus:outline-none touch-pan-x"
         style={{
           scrollSnapType: 'x mandatory',
           scrollbarWidth: 'none',
@@ -217,83 +217,83 @@ export default function MarqueeFixtureCard({ competition, season }: Props) {
                 scrollSnapAlign: 'start',
               }}
             >
-              <div className="rounded-xl p-4 sm:p-5 bg-black/25 border border-white/10 backdrop-blur-sm">
+              <div className="rounded-xl p-3 sm:p-5 bg-black/25 border border-white/10 backdrop-blur-sm">
                 {/* Matchup Centerpiece */}
-                <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 sm:gap-6 py-1">
+                <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-1.5 sm:gap-6 py-1">
                   {/* Home Team */}
-                  <div className="flex items-center justify-end gap-2.5 sm:gap-4 text-right min-w-0">
+                  <div className="flex items-center justify-end gap-1.5 sm:gap-4 text-right min-w-0">
                     <div className="truncate">
-                      <h3 className="font-bold text-base sm:text-lg text-white tracking-tight truncate">
+                      <h3 className="font-bold text-xs sm:text-base text-white tracking-tight truncate">
                         {match.home_team_short_name ?? match.home_team_name}
                       </h3>
-                      <p className="text-xs text-slate-400 hidden sm:block truncate">Home</p>
+                      <p className="text-[10px] sm:text-xs text-slate-400 hidden xs:block sm:block truncate">Home</p>
                     </div>
                     {match.home_team_crest_url ? (
                       <img
                         src={match.home_team_crest_url}
                         alt={`${match.home_team_name} crest`}
-                        className="w-10 h-10 sm:w-14 sm:h-14 object-contain shrink-0 drop-shadow-md"
+                        className="w-7 h-7 sm:w-14 sm:h-14 object-contain shrink-0 drop-shadow-md"
                         loading="lazy"
                       />
                     ) : (
-                      <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-white/10 flex items-center justify-center font-bold text-sm sm:text-base">
+                      <div className="w-7 h-7 sm:w-14 sm:h-14 rounded-full bg-white/10 flex items-center justify-center font-bold text-xs sm:text-base">
                         {(match.home_team_short_name ?? match.home_team_name).slice(0, 2)}
                       </div>
                     )}
                   </div>
 
                   {/* Center: Kickoff Time / Date */}
-                  <div className="flex flex-col items-center justify-center px-2 sm:px-4 py-1 text-center shrink-0">
-                    <div className="px-3 py-1 rounded-lg bg-black/50 border border-white/15 backdrop-blur-sm">
-                      <span className="text-sm sm:text-base font-bold tracking-wider text-amber-300">
+                  <div className="flex flex-col items-center justify-center px-1.5 sm:px-4 py-1 text-center shrink-0">
+                    <div className="px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg bg-black/50 border border-white/15 backdrop-blur-sm">
+                      <span className="text-xs sm:text-base font-bold tracking-wider text-amber-300">
                         {formattedTime}
                       </span>
                     </div>
-                    <span className="text-xs text-slate-300 mt-1 font-medium">{formattedDate}</span>
+                    <span className="text-[10px] sm:text-xs text-slate-300 mt-1 font-medium">{formattedDate}</span>
                     {match.matchday && (
-                      <span className="text-[11px] text-slate-400 mt-0.5">
-                        Matchday {match.matchday}
+                      <span className="text-[9px] sm:text-[11px] text-slate-400 mt-0.5">
+                        MD {match.matchday}
                       </span>
                     )}
                   </div>
 
                   {/* Away Team */}
-                  <div className="flex items-center justify-start gap-2.5 sm:gap-4 text-left min-w-0">
+                  <div className="flex items-center justify-start gap-1.5 sm:gap-4 text-left min-w-0">
                     {match.away_team_crest_url ? (
                       <img
                         src={match.away_team_crest_url}
                         alt={`${match.away_team_name} crest`}
-                        className="w-10 h-10 sm:w-14 sm:h-14 object-contain shrink-0 drop-shadow-md"
+                        className="w-7 h-7 sm:w-14 sm:h-14 object-contain shrink-0 drop-shadow-md"
                         loading="lazy"
                       />
                     ) : (
-                      <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-white/10 flex items-center justify-center font-bold text-sm sm:text-base">
+                      <div className="w-7 h-7 sm:w-14 sm:h-14 rounded-full bg-white/10 flex items-center justify-center font-bold text-xs sm:text-base">
                         {(match.away_team_short_name ?? match.away_team_name).slice(0, 2)}
                       </div>
                     )}
                     <div className="truncate">
-                      <h3 className="font-bold text-base sm:text-lg text-white tracking-tight truncate">
+                      <h3 className="font-bold text-xs sm:text-base text-white tracking-tight truncate">
                         {match.away_team_short_name ?? match.away_team_name}
                       </h3>
-                      <p className="text-xs text-slate-400 hidden sm:block truncate">Away</p>
+                      <p className="text-[10px] sm:text-xs text-slate-400 hidden xs:block sm:block truncate">Away</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Bottom Model Probabilities Bar (Shown only when authentic Poisson model odds exist) */}
                 {hasProbabilities && (
-                  <div className="mt-4 pt-3 border-t border-white/10">
-                    <div className="flex items-center justify-between text-xs text-slate-300 mb-2 font-medium">
-                      <span className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />
+                  <div className="mt-3 sm:mt-4 pt-2.5 sm:pt-3 border-t border-white/10">
+                    <div className="flex items-center justify-between text-[10px] sm:text-xs text-slate-300 mb-1.5 sm:mb-2 font-medium">
+                      <span className="flex items-center gap-1 sm:gap-1.5">
+                        <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-amber-400 inline-block" />
                         <span>Home: {homePct}%</span>
                       </span>
-                      <span className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-slate-400 inline-block" />
+                      <span className="flex items-center gap-1 sm:gap-1.5">
+                        <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-slate-400 inline-block" />
                         <span>Draw: {drawPct}%</span>
                       </span>
-                      <span className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-sky-400 inline-block" />
+                      <span className="flex items-center gap-1 sm:gap-1.5">
+                        <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-sky-400 inline-block" />
                         <span>Away: {awayPct}%</span>
                       </span>
                     </div>
@@ -329,17 +329,17 @@ export default function MarqueeFixtureCard({ competition, season }: Props) {
 
       {/* Slide Position Indicator under the card: text counter if > 6, otherwise dots */}
       {showControls && (
-        <div className="flex items-center justify-center mt-4">
+        <div className="flex items-center justify-center mt-3 sm:mt-4">
           {featured.length > 6 ? (
             <div
-              className="px-3 py-1 rounded-full bg-white/10 border border-white/15 text-xs font-semibold text-slate-200 tabular-nums tracking-wide"
+              className="min-h-[40px] px-4 py-2 inline-flex items-center justify-center rounded-full bg-white/10 border border-white/15 text-xs font-semibold text-slate-200 tabular-nums tracking-wide select-none"
               aria-live="polite"
               aria-atomic="true"
             >
               {activeIndex + 1} / {featured.length}
             </div>
           ) : (
-            <div className="flex items-center justify-center gap-2" role="tablist" aria-label="Fixture slides">
+            <div className="flex items-center justify-center gap-1.5" role="tablist" aria-label="Fixture slides">
               {featured.map((m, dotIdx) => (
                 <button
                   key={m.id}
@@ -347,12 +347,16 @@ export default function MarqueeFixtureCard({ competition, season }: Props) {
                   aria-selected={dotIdx === activeIndex}
                   aria-label={`Go to fixture ${dotIdx + 1}: ${m.home_team_name} vs ${m.away_team_name}`}
                   onClick={() => scrollToSlide(dotIdx)}
-                  className={`h-2 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/50 ${
-                    dotIdx === activeIndex
-                      ? 'w-6 bg-white shadow-sm'
-                      : 'w-2 bg-white/30 hover:bg-white/50'
-                  }`}
-                />
+                  className="min-h-[40px] min-w-[32px] sm:min-w-[40px] inline-flex items-center justify-center p-2 focus:outline-none focus:ring-2 focus:ring-white/50 rounded-lg"
+                >
+                  <span
+                    className={`h-2 rounded-full transition-all duration-200 block ${
+                      dotIdx === activeIndex
+                        ? 'w-6 bg-white shadow-sm'
+                        : 'w-2 bg-white/30 hover:bg-white/50'
+                    }`}
+                  />
+                </button>
               ))}
             </div>
           )}
