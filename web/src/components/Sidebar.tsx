@@ -5,7 +5,7 @@ interface SidebarProps {
   onSeasonChange: (s: number) => void;
 }
 
-const SEASONS = [2026, 2025];
+
 
 const COMPETITIONS = [
   { code: 'CL', name: 'Champions League', flag: '🏆', active: true },
