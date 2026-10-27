@@ -26,7 +26,7 @@ export default function Sidebar({
     >
       
       <div>
-        <p className="section-title px-3">Competition</p>
+        <p className="section-title px-3">Competitions</p>
         <div className="flex flex-col gap-1">
           {COMPETITIONS.map((c) => (
             <button

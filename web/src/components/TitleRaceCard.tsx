@@ -14,14 +14,7 @@ export default function TitleRaceCard({ competition, season }: Props) {
   if (isPending) return <LoadingSpinner label="Loading title race…" />;
   if (isError) return <ErrorCard message={(error as Error).message} />;
   if (!data || data.teams.length === 0) {
-    return (
-      <div className="card">
-        <p className="section-title">{isUcl ? 'League Phase Leader' : 'Title Race'}</p>
-        <p className="text-sm py-4 text-center" style={{ color: 'var(--text-muted)' }}>
-          No simulation data available.
-        </p>
-      </div>
-    );
+    return null;
   }
 
   const top3 = [...data.teams]
