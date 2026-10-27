@@ -15,7 +15,7 @@ const COMP_NAMES: Record<string, string> = {
 };
 
 export default function Dashboard() {
-  const [competition, setCompetition] = useState<string>('PD');
+  const [competition, setCompetition] = useState<string>('CL');
   const [season, setSeason] = useState<number>(2026);
   const [view, setView] = useState<'outlook' | 'table'>('table');
 
