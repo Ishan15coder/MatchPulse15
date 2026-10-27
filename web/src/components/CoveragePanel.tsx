@@ -2,15 +2,31 @@ import LoadingSpinner from './LoadingSpinner';
 import ErrorCard from './ErrorCard';
 import { useCoverage } from '../hooks/useCoverage';
 
-export default function CoveragePanel() {
+interface Props {
+  onClose?: () => void;
+}
+
+export default function CoveragePanel({ onClose }: Props) {
   const { data, isPending, isError, error } = useCoverage();
 
   if (isPending) return <LoadingSpinner label="Loading data coverage…" />;
   if (isError) return <ErrorCard message={(error as Error).message} />;
   if (!data || (data.coverage.length === 0 && data.limitations.length === 0)) {
     return (
-      <div className="card">
-        <p className="section-title">Data & Limitations</p>
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center justify-between">
+          <p className="section-title mb-0">Data & Limitations</p>
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close dialog"
+              className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-black/10 dark:hover:bg-white/10 text-slate-400 hover:text-slate-100 transition-colors"
+            >
+              ✕
+            </button>
+          )}
+        </div>
         <p className="text-sm py-4 text-center" style={{ color: 'var(--text-muted)' }}>
           No coverage metadata available.
         </p>
@@ -33,13 +49,27 @@ export default function CoveragePanel() {
     : null;
 
   return (
-    <div className="card flex flex-col gap-4">
-      <div>
-        <p className="section-title mb-1">Data & Limitations</p>
-        {formattedLatest && (
-          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-            Last ingested: <span className="font-medium">{formattedLatest}</span>
-          </p>
+    <div className="flex flex-col gap-4">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
+            Data & Limitations
+          </h2>
+          {formattedLatest && (
+            <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
+              Last ingested: <span className="font-medium">{formattedLatest}</span>
+            </p>
+          )}
+        </div>
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close dialog"
+            className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-lg hover:bg-black/10 dark:hover:bg-white/10 text-slate-400 hover:text-slate-100 transition-colors text-lg focus:outline-none focus:ring-2 focus:ring-accent"
+          >
+            ✕
+          </button>
         )}
       </div>
 
@@ -48,20 +78,23 @@ export default function CoveragePanel() {
         <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
           Match Coverage
         </p>
-        <div className="divide-y text-xs" style={{ borderColor: 'var(--border)' }}>
+        <div className="divide-y text-xs border rounded-xl px-3" style={{ borderColor: 'var(--border)' }}>
           {data.coverage.map((row) => (
             <div
               key={`${row.competition_code}-${row.season}`}
-              className="py-2 flex items-center justify-between gap-2"
+              className="py-2.5 flex items-center justify-between gap-2"
+              style={{ borderColor: 'var(--border)' }}
             >
               <div>
-                <span className="font-medium">{row.competition_name}</span>
-                <span className="ml-1.5 opacity-60">
+                <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>
+                  {row.competition_name}
+                </span>
+                <span className="ml-1.5 opacity-60" style={{ color: 'var(--text-muted)' }}>
                   {row.season}/{String(row.season + 1).slice(2)}
                 </span>
               </div>
               <div className="tabular-nums font-medium text-right">
-                <span>{row.finished_count}</span>
+                <span style={{ color: 'var(--text-primary)' }}>{row.finished_count}</span>
                 <span style={{ color: 'var(--text-muted)' }}> / {row.match_count} matches</span>
               </div>
             </div>
@@ -69,15 +102,15 @@ export default function CoveragePanel() {
         </div>
       </div>
 
-      {/* Visible Limitations List — never collapsed, never in tooltip */}
-      <div className="pt-3 border-t" style={{ borderColor: 'var(--border)' }}>
+      {/* Visible Limitations List */}
+      <div className="pt-2">
         <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--text-muted)' }}>
           System Limitations
         </p>
-        <ul className="space-y-1.5 text-xs" style={{ color: 'var(--text-muted)' }}>
+        <ul className="space-y-2 text-xs" style={{ color: 'var(--text-muted)' }}>
           {data.limitations.map((lim, index) => (
             <li key={index} className="flex items-start gap-2 leading-relaxed">
-              <span className="text-accent shrink-0 select-none">•</span>
+              <span className="text-accent shrink-0 select-none font-bold">•</span>
               <span>{lim}</span>
             </li>
           ))}
