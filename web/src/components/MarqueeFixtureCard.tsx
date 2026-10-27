@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useUpcomingMatches } from '../hooks/useUpcomingMatches';
 import { useStandings } from '../hooks/useStandings';
 import { sortFeaturedMatches, CURRENT_SEASON } from '../lib/marquee';
@@ -11,6 +12,44 @@ export default function MarqueeFixtureCard({ competition, season }: Props) {
   const isCurrentSeason = season === CURRENT_SEASON;
   const { data: matches, isPending, isError } = useUpcomingMatches(competition, season, 30);
   const { data: standings } = useStandings(competition, season);
+
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  const featured = isCurrentSeason && matches && !isError
+    ? sortFeaturedMatches(matches, standings).slice(0, 3)
+    : [];
+
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el || el.clientWidth === 0) return;
+    const index = Math.round(el.scrollLeft / el.clientWidth);
+    const clamped = Math.max(0, Math.min(index, featured.length - 1));
+    setActiveIndex(clamped);
+  }, [featured.length]);
+
+  const scrollToSlide = (index: number) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const targetLeft = index * el.clientWidth;
+    el.scrollTo({ left: targetLeft, behavior: 'smooth' });
+    setActiveIndex(index);
+  };
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.addEventListener('scroll', handleScroll, { passive: true });
+    return () => el.removeEventListener('scroll', handleScroll);
+  }, [handleScroll]);
+
+  // Reset scroll and active index if competition changes
+  useEffect(() => {
+    setActiveIndex(0);
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({ left: 0, behavior: 'auto' });
+    }
+  }, [competition]);
 
   // Do not render the card when the selected season is not CURRENT_SEASON
   if (!isCurrentSeason) {
@@ -26,13 +65,8 @@ export default function MarqueeFixtureCard({ competition, season }: Props) {
     );
   }
 
-  if (isError || !matches || matches.length === 0) {
+  if (isError || !matches || matches.length === 0 || featured.length === 0) {
     return null; // Don't show if there are no upcoming matches
-  }
-
-  const featured = sortFeaturedMatches(matches, standings).slice(0, 3);
-  if (featured.length === 0) {
-    return null;
   }
 
   const compLabel =
@@ -45,8 +79,13 @@ export default function MarqueeFixtureCard({ competition, season }: Props) {
       ? 'Premier League'
       : 'La Liga');
 
+  const showControls = featured.length > 1;
+
   return (
     <div
+      role="region"
+      aria-roledescription="carousel"
+      aria-label={`${compLabel} Featured Fixtures`}
       className="relative overflow-hidden rounded-2xl p-5 sm:p-6 text-white shadow-xl transition-all"
       style={{
         background:
@@ -87,7 +126,7 @@ export default function MarqueeFixtureCard({ competition, season }: Props) {
         aria-hidden="true"
       />
 
-      {/* Header Row: Badges */}
+      {/* Header Row: Badges & Next/Prev Controls */}
       <div className="flex items-center justify-between gap-3 mb-4">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs px-2.5 py-0.5 rounded-full font-semibold bg-white/15 text-white tracking-wide">
@@ -97,14 +136,52 @@ export default function MarqueeFixtureCard({ competition, season }: Props) {
             Featured Fixtures
           </span>
         </div>
-        <span className="text-xs text-slate-400 font-medium">
-          Top {featured.length} upcoming
-        </span>
+
+        {/* Previous / Next buttons (40px tap targets, hidden below sm breakpoint) */}
+        {showControls && (
+          <div className="hidden sm:flex items-center gap-2 shrink-0">
+            <span className="text-xs text-slate-400 mr-1">
+              {activeIndex + 1} of {featured.length}
+            </span>
+            <button
+              type="button"
+              onClick={() => scrollToSlide(activeIndex - 1)}
+              disabled={activeIndex === 0}
+              aria-label="Previous fixture"
+              className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 disabled:opacity-30 disabled:pointer-events-none text-slate-200 transition-all focus:outline-none focus:ring-2 focus:ring-white/40"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollToSlide(activeIndex + 1)}
+              disabled={activeIndex === featured.length - 1}
+              aria-label="Next fixture"
+              className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 disabled:opacity-30 disabled:pointer-events-none text-slate-200 transition-all focus:outline-none focus:ring-2 focus:ring-white/40"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+              </svg>
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Featured Fixtures List (up to 3) */}
-      <div className="flex flex-col gap-3">
-        {featured.map((match) => {
+      {/* Horizontal Flex Slider Container with CSS Scroll-Snap */}
+      <div
+        ref={scrollRef}
+        tabIndex={0}
+        aria-label="Fixtures slider"
+        className="flex w-full overflow-x-auto focus:outline-none"
+        style={{
+          scrollSnapType: 'x mandatory',
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
+        }}
+      >
+        {featured.map((match, idx) => {
           // Authentic model match odds from Poisson simulation (if available for this competition/fixture)
           const hasProbabilities =
             match.prob_home != null &&
@@ -129,115 +206,144 @@ export default function MarqueeFixtureCard({ competition, season }: Props) {
           return (
             <div
               key={match.id}
-              className="rounded-xl p-3.5 sm:p-4 bg-black/25 border border-white/10 backdrop-blur-sm transition-colors hover:bg-black/35"
+              role="group"
+              aria-roledescription="slide"
+              aria-label={`Fixture ${idx + 1} of ${featured.length}: ${match.home_team_name} vs ${match.away_team_name}`}
+              className="w-full flex-shrink-0"
+              style={{
+                flex: '0 0 100%',
+                scrollSnapAlign: 'start',
+              }}
             >
-              {/* Matchup Centerpiece */}
-              <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-4 py-1">
-                {/* Home Team */}
-                <div className="flex items-center justify-end gap-2 sm:gap-3 text-right min-w-0">
-                  <div className="truncate">
-                    <h3 className="font-bold text-sm sm:text-base text-white tracking-tight truncate">
-                      {match.home_team_short_name ?? match.home_team_name}
-                    </h3>
-                    <p className="text-[11px] text-slate-400 hidden sm:block truncate">Home</p>
-                  </div>
-                  {match.home_team_crest_url ? (
-                    <img
-                      src={match.home_team_crest_url}
-                      alt={`${match.home_team_name} crest`}
-                      className="w-8 h-8 sm:w-11 sm:h-11 object-contain shrink-0 drop-shadow-md"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-full bg-white/10 flex items-center justify-center font-bold text-xs sm:text-sm">
-                      {(match.home_team_short_name ?? match.home_team_name).slice(0, 2)}
+              <div className="rounded-xl p-4 sm:p-5 bg-black/25 border border-white/10 backdrop-blur-sm">
+                {/* Matchup Centerpiece */}
+                <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 sm:gap-6 py-1">
+                  {/* Home Team */}
+                  <div className="flex items-center justify-end gap-2.5 sm:gap-4 text-right min-w-0">
+                    <div className="truncate">
+                      <h3 className="font-bold text-base sm:text-lg text-white tracking-tight truncate">
+                        {match.home_team_short_name ?? match.home_team_name}
+                      </h3>
+                      <p className="text-xs text-slate-400 hidden sm:block truncate">Home</p>
                     </div>
-                  )}
+                    {match.home_team_crest_url ? (
+                      <img
+                        src={match.home_team_crest_url}
+                        alt={`${match.home_team_name} crest`}
+                        className="w-10 h-10 sm:w-14 sm:h-14 object-contain shrink-0 drop-shadow-md"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-white/10 flex items-center justify-center font-bold text-sm sm:text-base">
+                        {(match.home_team_short_name ?? match.home_team_name).slice(0, 2)}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Center: Kickoff Time / Date */}
+                  <div className="flex flex-col items-center justify-center px-2 sm:px-4 py-1 text-center shrink-0">
+                    <div className="px-3 py-1 rounded-lg bg-black/50 border border-white/15 backdrop-blur-sm">
+                      <span className="text-sm sm:text-base font-bold tracking-wider text-amber-300">
+                        {formattedTime}
+                      </span>
+                    </div>
+                    <span className="text-xs text-slate-300 mt-1 font-medium">{formattedDate}</span>
+                    {match.matchday && (
+                      <span className="text-[11px] text-slate-400 mt-0.5">
+                        Matchday {match.matchday}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Away Team */}
+                  <div className="flex items-center justify-start gap-2.5 sm:gap-4 text-left min-w-0">
+                    {match.away_team_crest_url ? (
+                      <img
+                        src={match.away_team_crest_url}
+                        alt={`${match.away_team_name} crest`}
+                        className="w-10 h-10 sm:w-14 sm:h-14 object-contain shrink-0 drop-shadow-md"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-white/10 flex items-center justify-center font-bold text-sm sm:text-base">
+                        {(match.away_team_short_name ?? match.away_team_name).slice(0, 2)}
+                      </div>
+                    )}
+                    <div className="truncate">
+                      <h3 className="font-bold text-base sm:text-lg text-white tracking-tight truncate">
+                        {match.away_team_short_name ?? match.away_team_name}
+                      </h3>
+                      <p className="text-xs text-slate-400 hidden sm:block truncate">Away</p>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Center: Kickoff Time / Date */}
-                <div className="flex flex-col items-center justify-center px-1.5 sm:px-3 py-1 text-center shrink-0">
-                  <div className="px-2.5 py-1 rounded-lg bg-black/50 border border-white/15 backdrop-blur-sm">
-                    <span className="text-xs sm:text-sm font-bold tracking-wider text-amber-300">
-                      {formattedTime}
-                    </span>
-                  </div>
-                  <span className="text-[11px] text-slate-300 mt-1 font-medium">{formattedDate}</span>
-                  {match.matchday && (
-                    <span className="text-[10px] text-slate-400 mt-0.5">
-                      Matchday {match.matchday}
-                    </span>
-                  )}
-                </div>
-
-                {/* Away Team */}
-                <div className="flex items-center justify-start gap-2 sm:gap-3 text-left min-w-0">
-                  {match.away_team_crest_url ? (
-                    <img
-                      src={match.away_team_crest_url}
-                      alt={`${match.away_team_name} crest`}
-                      className="w-8 h-8 sm:w-11 sm:h-11 object-contain shrink-0 drop-shadow-md"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-full bg-white/10 flex items-center justify-center font-bold text-xs sm:text-sm">
-                      {(match.away_team_short_name ?? match.away_team_name).slice(0, 2)}
+                {/* Bottom Model Probabilities Bar (Shown only when authentic Poisson model odds exist) */}
+                {hasProbabilities && (
+                  <div className="mt-4 pt-3 border-t border-white/10">
+                    <div className="flex items-center justify-between text-xs text-slate-300 mb-2 font-medium">
+                      <span className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />
+                        <span>Home: {homePct}%</span>
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-slate-400 inline-block" />
+                        <span>Draw: {drawPct}%</span>
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-sky-400 inline-block" />
+                        <span>Away: {awayPct}%</span>
+                      </span>
                     </div>
-                  )}
-                  <div className="truncate">
-                    <h3 className="font-bold text-sm sm:text-base text-white tracking-tight truncate">
-                      {match.away_team_short_name ?? match.away_team_name}
-                    </h3>
-                    <p className="text-[11px] text-slate-400 hidden sm:block truncate">Away</p>
+
+                    {/* Multi-segment Probability Track */}
+                    <div
+                      className="w-full h-2 rounded-full overflow-hidden flex bg-white/10"
+                      aria-label="Match probabilities bar"
+                    >
+                      <div
+                        className="h-full bg-amber-400 transition-all duration-300"
+                        style={{ width: `${homePct}%` }}
+                        title={`Home win: ${homePct}%`}
+                      />
+                      <div
+                        className="h-full bg-slate-400/80 transition-all duration-300"
+                        style={{ width: `${drawPct}%` }}
+                        title={`Draw: ${drawPct}%`}
+                      />
+                      <div
+                        className="h-full bg-sky-400 transition-all duration-300"
+                        style={{ width: `${awayPct}%` }}
+                        title={`Away win: ${awayPct}%`}
+                      />
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
-
-              {/* Bottom Model Probabilities Bar (Shown only when authentic Poisson model odds exist) */}
-              {hasProbabilities && (
-                <div className="mt-3 pt-2.5 border-t border-white/10">
-                  <div className="flex items-center justify-between text-[11px] sm:text-xs text-slate-300 mb-1.5 font-medium">
-                    <span className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />
-                      <span>Home: {homePct}%</span>
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-slate-400 inline-block" />
-                      <span>Draw: {drawPct}%</span>
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-sky-400 inline-block" />
-                      <span>Away: {awayPct}%</span>
-                    </span>
-                  </div>
-
-                  {/* Multi-segment Probability Track */}
-                  <div
-                    className="w-full h-2 rounded-full overflow-hidden flex bg-white/10"
-                    aria-label="Match probabilities bar"
-                  >
-                    <div
-                      className="h-full bg-amber-400 transition-all duration-300"
-                      style={{ width: `${homePct}%` }}
-                      title={`Home win: ${homePct}%`}
-                    />
-                    <div
-                      className="h-full bg-slate-400/80 transition-all duration-300"
-                      style={{ width: `${drawPct}%` }}
-                      title={`Draw: ${drawPct}%`}
-                    />
-                    <div
-                      className="h-full bg-sky-400 transition-all duration-300"
-                      style={{ width: `${awayPct}%` }}
-                      title={`Away win: ${awayPct}%`}
-                    />
-                  </div>
-                </div>
-              )}
             </div>
           );
         })}
       </div>
+
+      {/* Dots Indicator under the card */}
+      {showControls && (
+        <div className="flex items-center justify-center gap-2 mt-4" role="tablist" aria-label="Fixture slides">
+          {featured.map((m, dotIdx) => (
+            <button
+              key={m.id}
+              role="tab"
+              aria-selected={dotIdx === activeIndex}
+              aria-label={`Go to fixture ${dotIdx + 1}: ${m.home_team_name} vs ${m.away_team_name}`}
+              onClick={() => scrollToSlide(dotIdx)}
+              className={`h-2 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/50 ${
+                dotIdx === activeIndex
+                  ? 'w-6 bg-white shadow-sm'
+                  : 'w-2 bg-white/30 hover:bg-white/50'
+              }`}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
