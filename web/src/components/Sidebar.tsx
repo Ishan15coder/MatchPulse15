@@ -17,8 +17,7 @@ const COMPETITIONS = [
 export default function Sidebar({
   competition,
   onCompetitionChange,
-  season,
-  onSeasonChange,
+
 }: SidebarProps) {
   return (
     <aside
