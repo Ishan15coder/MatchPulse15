@@ -40,6 +40,11 @@ jobs:
             sleep 15
           done
 
+      - name: Apply history migration
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f sql/004_history.sql
+
       - name: Run simulations
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
