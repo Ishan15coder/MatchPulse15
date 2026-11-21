@@ -1,5 +1,6 @@
 import os
 import sys
+from datetime import datetime, timezone
 import psycopg
 from data import load_finished_matches, load_season_matches   # importing data.py also loads .env
 from simulate import simulate, compute_fixture_probabilities, N_SIMS
@@ -34,6 +35,19 @@ DO UPDATE SET prob_home  = EXCLUDED.prob_home,
               updated_at = now();
 """
 
+INSERT_SIM_HIST = """
+INSERT INTO simulation_history
+    (competition_id, season, team_id, snapshot_at, matches_finished,
+     points_now, exp_points, p_title, p_top4, p_relegation)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+"""
+
+INSERT_PROB_HIST = """
+INSERT INTO match_probability_history
+    (match_id, snapshot_at, prob_home, prob_draw, prob_away)
+VALUES (%s, %s, %s, %s, %s);
+"""
+
 conn_kwargs = (
     {"conninfo": os.environ["DATABASE_URL"]}
     if "DATABASE_URL" in os.environ
@@ -45,6 +59,8 @@ conn_kwargs = (
         "password": os.environ["POSTGRES_PASSWORD"],
     }
 )
+
+snapshot_at = datetime.now(timezone.utc)
 
 with psycopg.connect(**conn_kwargs) as conn:
     with conn.cursor() as cur:
@@ -75,4 +91,35 @@ with psycopg.connect(**conn_kwargs) as conn:
                 cur.execute(UPSERT_PROB, (
                     int(r.match_id), float(r.prob_home), float(r.prob_draw), float(r.prob_away)
                 ))
-            print(f"Saved {len(probs_df)} fixture probability rows for {code}")
+            print(f"Saved {len(probs_df)} fixture probability rows for {code}")
+
+            # Count finished matches for this competition and season
+            matches_finished = int((season_df["status"] == "FINISHED").sum())
+
+            # Read matches_finished from the latest snapshot for this competition and season
+            cur.execute("""
+                SELECT matches_finished
+                FROM simulation_history
+                WHERE competition_id = %s AND season = %s
+                ORDER BY snapshot_at DESC
+                LIMIT 1;
+            """, (competition_id, SEASON))
+            last_snapshot = cur.fetchone()
+
+            if last_snapshot is None or last_snapshot[0] != matches_finished:
+                # For CL, p_top4 is the top-8 probability and p_relegation is the eliminated probability
+                for r in res.itertuples():
+                    cur.execute(INSERT_SIM_HIST, (
+                        competition_id, SEASON, int(r.team_id), snapshot_at, matches_finished,
+                        int(r.points_now), float(r.exp_points), float(r.title),
+                        float(r.top4), float(r.relegation),
+                    ))
+                for r in probs_df.itertuples():
+                    cur.execute(INSERT_PROB_HIST, (
+                        int(r.match_id), snapshot_at,
+                        float(r.prob_home), float(r.prob_draw), float(r.prob_away),
+                    ))
+                print(f"snapshot written ({len(res)} teams, {len(probs_df)} matches)")
+            else:
+                print("snapshot skipped (unchanged)")
+
